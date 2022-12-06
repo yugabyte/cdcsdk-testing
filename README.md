@@ -49,3 +49,12 @@ To run the tests, follow these steps:
 * The below command will create a docker image of CDCSDK Server and run
 integration tests in cdcsdk-testing
     * ```mvn integration-test -Drun.releaseTests```
+    
+## Running tests with Specific Images for CDCSDK server and Kafka Connect
+
+To run tests with specific images for CDCSDK server and Kafka Connect, you can set the following environment variables
+```
+    export KAFKA_CONNECT_IMAGE = "<image-for-kafka-connect>"
+    export CDCSDK_SERVER_IMAGE = "<image-for-CDCSDK-server>"
+```
+The default image for Kafka connect is ```quay.io/yugabyte/debezium-connector:1.3.7-BETA``` and the default image for CDCSDK Server is ```quay.io/yugabyte/cdcsdk-server:latest```
