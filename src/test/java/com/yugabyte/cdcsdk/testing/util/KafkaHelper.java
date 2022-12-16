@@ -18,9 +18,11 @@ import org.testcontainers.containers.GenericContainer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import io.debezium.testing.testcontainers.ConnectorConfiguration;
+
 /**
  * Helper class to facilitate Kafka related operations
- * 
+ *
  * @author Vaibhav Kushwaha (vkushwaha@yugabyte.com)
  */
 public class KafkaHelper {
@@ -47,7 +49,7 @@ public class KafkaHelper {
 
     /**
      * Get the bootstrap servers address where the Kafka process is running on the host machine. This URL can be used by APIs trying to connect to Kafka
-     * 
+     *
      * @return the comma separated values of the bootstrap servers in the form host:port
      */
     public String setBootstrapServers() {
@@ -56,7 +58,7 @@ public class KafkaHelper {
 
     /**
      * Get a {@link KafkaConsumer} instance
-     * 
+     *
      * @return the {@link KafkaConsumer} instance
      */
     public KafkaConsumer<String, JsonNode> getKafkaConsumer() {
@@ -73,7 +75,7 @@ public class KafkaHelper {
 
     /**
      * Delete the topics provided in the list
-     * 
+     *
      * @param topicsToBeDeleted list of topics to be deleted
      * @throws Exception
      */
@@ -93,7 +95,7 @@ public class KafkaHelper {
 
     /**
      * Wrapper function around {@link #deleteTopicInKafka(String, List)}
-     * 
+     *
      * @param topicName name of the topic to be deleted
      */
     public void deleteTopicInKafka(String topicName) {
@@ -137,5 +139,36 @@ public class KafkaHelper {
 
     public GenericContainer<?> getCdcsdkContainer(YBHelper ybHelper, String tableIncludeList, int bootstrapLogLineCount) throws Exception {
         return getCdcsdkContainer(ybHelper, tableIncludeList, bootstrapLogLineCount, "never");
+    }
+
+    /**
+     * Get configurations for Kafka connect source connector
+     * @param ybHelper {@link YBHelper} object having the information of YugabyteDB instance
+     * @param tableIncludeList comma separated list of tables in the form <em>schemaName.tableName</em>
+     * @return a {@link ConnectorConfiguration} for Kafka connect source connector
+     * @throws Exception if things go wrong
+     */
+    public ConnectorConfiguration getSourceConfiguration (YBHelper ybHelper, String tableIncludeList) throws Exception {
+        return ConnectorConfiguration
+                .create()
+                .with("connector.class","io.debezium.connector.yugabytedb.YugabyteDBConnector")
+                .with("database.hostname",ybHelper.getHostName())
+                .with("database.port","5433")
+                .with("database.master.addresses",ybHelper.getHostName()+":"+String.valueOf(ybHelper.getMasterPort()))
+                .with("database.user","yugabyte")
+                .with("database.password","yugabyte")
+                .with("database.dbname","yugabyte")
+                .with("database.server.name",UtilStrings.DATABASE_SERVER_NAME)
+                .with("table.include.list", tableIncludeList)
+                .with("snapshot.mode","never")
+                .with("database.streamid",  ybHelper.getNewDbStreamId(ybHelper.getDatabaseName()))
+                .with("producer.key.converter.schemas.enable","true")
+                .with("producer.value.converter.schemas.enable","true")
+                .with("key.converter","org.apache.kafka.connect.json.JsonConverter")
+                .with("value.converter", "org.apache.kafka.connect.json.JsonConverter")
+                .with("transforms","unwrap")
+                .with("transforms.unwrap.type","io.debezium.connector.yugabytedb.transforms.YBExtractNewRecordState")
+                .with("transforms.unwrap.drop.tombstones","false")
+                .with("tasks.max", 1);
     }
 }
