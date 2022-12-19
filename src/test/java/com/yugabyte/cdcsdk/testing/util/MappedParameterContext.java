@@ -31,5 +31,4 @@ public class MappedParameterContext implements ParameterContext {
     public <A extends Annotation> List<A> findRepeatableAnnotations(Class<A> annotationType) {
         return AnnotationUtils.findRepeatableAnnotations(parameter, annotationType);
     }
-
 }

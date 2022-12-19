@@ -58,5 +58,4 @@ public class AfterBeforeParameterResolver implements BeforeEachMethodAdapter, Pa
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return parameterisedTestParameterResolver.resolveParameter(getMappedContext(parameterContext, extensionContext), extensionContext);
     }
-
 }
