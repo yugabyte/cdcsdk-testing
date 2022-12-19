@@ -45,6 +45,12 @@ public class UtilStrings {
             + "'(2017-07-04 12:30:30 UTC, 2021-07-04 12:30:30+05:30)', '(2019-10-07, 2021-10-07)', 'text to verify behaviour', '12:47:32', '12:00:00+05:30', "
             + "'2021-11-25 12:00:00', '2021-11-25 12:00:00+05:30', 'ffffffff-ffff-ffff-ffff-ffffffffffff');";
 
+    public static final String CDC_CLIENT_CDCSDK = "CDCSDK";
+
+    public static final String CDC_CLIENT_KAFKA_CONNECT = "Kafka Connect";
+
+    public static final String CDC_SINK_POSTGRES = "Postgres";
+
     /**
      * Get a create table statement for table to be created in YugabyteDB database
      *
