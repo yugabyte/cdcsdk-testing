@@ -17,15 +17,22 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yugabyte.cdcsdk.testing.util.AfterBeforeParameterResolver;
 import com.yugabyte.cdcsdk.testing.util.CdcsdkTestBase;
 import com.yugabyte.cdcsdk.testing.util.UtilStrings;
 
@@ -35,8 +42,11 @@ import io.debezium.testing.testcontainers.ConnectorConfiguration;
  * Release test that verifies basic reading from a YugabyteDB database and
  * writing to Kafka and then further to a PostgreSQL sink database
  *
- * @author Isha Amoncar, Vaibhav Kushwaha (vkushwaha@yugabyte.com)
+ * @author Isha Amoncar, Sumukh Phalgaonkar, Vaibhav Kushwaha (vkushwaha@yugabyte.com)
  */
+
+@ExtendWith(AfterBeforeParameterResolver.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class PostgresSinkConsumerIT extends CdcsdkTestBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresSinkConsumerIT.class);
     private KafkaConsumer<String, JsonNode> consumer;
@@ -44,6 +54,10 @@ public class PostgresSinkConsumerIT extends CdcsdkTestBase {
     private static int recordsToBeInserted = 5;
 
     private static ConnectorConfiguration connector;
+    private static ConnectorConfiguration sourceConnector;
+    private static int recordNumber;
+    private int totalReordsInKafka = recordsToBeInserted * 2;
+    private boolean allowInsert = true;
 
     @BeforeAll
     public static void beforeClass() throws Exception {
@@ -60,31 +74,54 @@ public class PostgresSinkConsumerIT extends CdcsdkTestBase {
 
         // Set JDBC sink connector config.
         connector = pgHelper.getJdbcSinkConfiguration(postgresContainer, "id");
-        // setConnectorConfiguration();
-        kafkaConnectContainer.registerConnector("test-connector", connector);
 
-        // Assuming that yugabyted is running.
+        kafkaConnectContainer.registerConnector("sink-connector", connector);
+
+    }
+
+    @BeforeEach
+    public void BeforeEach(String param) throws Exception {
         ybHelper.execute(UtilStrings.getCreateTableYBStmt(DEFAULT_TABLE_NAME));
 
-        // Initialise expected_data.
-        for (int i = 0; i < recordsToBeInserted; i++) {
-            Map<String, Object> expectedRecord = new LinkedHashMap<String, Object>();
-            expectedRecord.put("id", i);
-            expectedRecord.put("first_name", new String("first_" + i));
-            expectedRecord.put("last_name", new String("last_" + i));
-            expectedRecord.put("days_worked", Double.valueOf(23.45));
-            expectedDataInKafka.add(expectedRecord);
+        if (param.equals(UtilStrings.CDC_CLIENT_KAFKA_CONNECT)) {
+            // Set source connector config.
+            sourceConnector = kafkaHelper.getSourceConfiguration(ybHelper, "public." + DEFAULT_TABLE_NAME);
+            kafkaConnectContainer.registerConnector("source-connector", sourceConnector);
+            recordNumber = 5;
+            allowInsert = true;
+            getExpectedDataInKafka();
         }
 
-        // Start CDCSDK server testcontainer.
-        cdcsdkContainer = kafkaHelper.getCdcsdkContainer(ybHelper, "public." + DEFAULT_TABLE_NAME, 1);
-        cdcsdkContainer.withNetwork(containerNetwork);
-        cdcsdkContainer.start();
+        else if (param.equals(UtilStrings.CDC_CLIENT_CDCSDK)) {
+            // Start CDCSDK server testcontainer.
+            cdcsdkContainer = kafkaHelper.getCdcsdkContainer(ybHelper, "public." + DEFAULT_TABLE_NAME, 1);
+            cdcsdkContainer.withNetwork(containerNetwork);
+            cdcsdkContainer.start();
+            recordNumber = 0;
+            allowInsert = true;
+            getExpectedDataInKafka();
+        }
+
+        else {
+            allowInsert = false;
+        }
+
+        // Wait for bootstrapping to take place
+        Awaitility.await().atMost(Duration.ofSeconds(30)).pollDelay(Duration.ofSeconds(20)).until(() -> true);
 
         // Insert records in YB.
-        for (int i = 0; i < recordsToBeInserted; ++i) {
-            ybHelper.execute(UtilStrings.getInsertStmt(DEFAULT_TABLE_NAME, i, "first_" + i, "last_" + i, 23.45));
+        if (allowInsert) {
+            for (int i = 0; i < recordsToBeInserted; ++i) {
+                ybHelper.execute(UtilStrings.getInsertStmt(DEFAULT_TABLE_NAME, i + recordNumber,
+                        "first_" + (i + recordNumber), "last_" + (i + recordNumber), 23.45));
+            }
         }
+
+    }
+
+    @AfterEach
+    public void afterEach() throws Exception {
+        ybHelper.execute(UtilStrings.getDropTableStmt(DEFAULT_TABLE_NAME));
     }
 
     @AfterAll
@@ -96,9 +133,10 @@ public class PostgresSinkConsumerIT extends CdcsdkTestBase {
         ybHelper.execute(UtilStrings.getDropTableStmt(DEFAULT_TABLE_NAME));
     }
 
-    @Test
+    @ParameterizedTest
+    @ValueSource(strings = {UtilStrings.CDC_CLIENT_CDCSDK, UtilStrings.CDC_CLIENT_KAFKA_CONNECT })
     @Order(1)
-    public void verifyRecordsInKafka() throws Exception {
+    public void verifyRecordsInKafka(String param) throws Exception {
         consumer = kafkaHelper.getKafkaConsumer();
         consumer.subscribe(Arrays.asList(ybHelper.getKafkaTopicName()));
 
@@ -131,11 +169,11 @@ public class PostgresSinkConsumerIT extends CdcsdkTestBase {
         assertNotEquals(recordsAsserted, 0);
     }
 
-    @Test
+    @ParameterizedTest
+    @ValueSource(strings = {UtilStrings.CDC_SINK_POSTGRES})
     @Order(2)
-    public void verifyRecordsInPostgresFromKafka() throws Exception {
-        pgHelper.waitTillRecordsAreVerified(recordsToBeInserted, 10000);
-
+    public void verifyRecordsInPostgresFromKafka(String param) throws Exception {
+        pgHelper.waitTillRecordsAreVerified(totalReordsInKafka, 10000);
         ResultSet rs = pgHelper.executeAndGetResultSet(String.format("SELECT * FROM %s;", DEFAULT_TABLE_NAME));
         List<Map<String, Object>> postgresRecords = new ArrayList<>();
         while (rs.next()) {
@@ -159,5 +197,16 @@ public class PostgresSinkConsumerIT extends CdcsdkTestBase {
             }
         }
         assertNotEquals(recordsAsserted, 0);
+    }
+
+    public static void getExpectedDataInKafka() {
+        for (int i = 0; i < recordsToBeInserted; i++) {
+            Map<String, Object> expectedRecord = new LinkedHashMap<String, Object>();
+            expectedRecord.put("id", (i + recordNumber));
+            expectedRecord.put("first_name", new String("first_" + (i + recordNumber)));
+            expectedRecord.put("last_name", new String("last_" + (i + recordNumber)));
+            expectedRecord.put("days_worked", Double.valueOf(23.45));
+            expectedDataInKafka.add(expectedRecord);
+        }
     }
 }

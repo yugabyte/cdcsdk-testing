@@ -208,6 +208,12 @@
         <artifactId>azure-messaging-eventhubs</artifactId>
         <version>5.15.0</version>
     </dependency>
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.18.24</version>
+        <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <dependencyManagement>
