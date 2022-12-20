@@ -1,5 +1,6 @@
 package com.yugabyte.cdcsdk.testing.util;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -51,7 +52,7 @@ public class AfterBeforeParameterResolver implements BeforeEachMethodAdapter, Pa
     }
 
     private boolean isAfterEachOrBeforeEachAnnotation(Annotation annotation) {
-        return annotation.annotationType() == BeforeEach.class ;
+        return annotation.annotationType() == BeforeEach.class || annotation.annotationType() == AfterEach.class;
     }
 
     @Override
