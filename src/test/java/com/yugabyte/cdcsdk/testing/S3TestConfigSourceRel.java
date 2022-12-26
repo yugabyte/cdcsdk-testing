@@ -3,7 +3,7 @@ package com.yugabyte.cdcsdk.testing;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.yugabyte.cdcsdk.server.TestConfigSource;
+import com.yugabyte.cdcsdk.testing.util.TestConfigSource;
 
 public class S3TestConfigSourceRel extends TestConfigSource {
     public S3TestConfigSourceRel() {

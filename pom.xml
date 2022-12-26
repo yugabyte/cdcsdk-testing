@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <!-- <parent>
-    <groupId>com.yugabyte</groupId>
-    <artifactId>cdcsdk-parent</artifactId>
-    <version>1.0.0.RC1</version>
-	  <relativePath>../cdcsdk-parent/pom.xml</relativePath>
-  </parent> -->
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.yugabyte</groupId>
@@ -42,17 +36,6 @@
     </distributionManagement>
 
   <dependencies>
-    <dependency>
-        <groupId>com.yugabyte</groupId>
-        <artifactId>cdcsdk-server-core</artifactId>
-        <version>${version.cdcsdk}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.yugabyte</groupId>
-      <artifactId>cdcsdk-server-s3</artifactId>
-      <version>${version.cdcsdk}</version>
-    </dependency>
-
     <dependency>
         <groupId>org.yb</groupId>
         <artifactId>yb-client</artifactId>
@@ -92,21 +75,6 @@
     <!-- Testing -->
     <dependency>
       <groupId>com.yugabyte</groupId>
-      <artifactId>cdcsdk-server-core</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-      <version>${version.cdcsdk}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.yugabyte</groupId>
-      <artifactId>cdcsdk-server-s3</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-      <version>${version.cdcsdk}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.yugabyte</groupId>
       <artifactId>testcontainers-yugabytedb</artifactId>
       <version>1.0.0-beta-3</version>
       <scope>test</scope>
@@ -135,6 +103,30 @@
       <version>1.9.5.Final</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+        <groupId>io.debezium</groupId>
+        <artifactId>debezium-api</artifactId>
+        <version>1.9.5.Final</version>
+    </dependency>
+    <dependency>
+        <groupId>io.debezium</groupId>
+        <artifactId>debezium-core</artifactId>
+        <type>test-jar</type>
+        <scope>test</scope>
+        <version>1.9.5.Final</version>
+    </dependency>
+    <dependency>
+        <groupId>io.debezium</groupId>
+        <artifactId>debezium-connector-postgres</artifactId>
+        <scope>test</scope>
+        <version>1.9.5.Final</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>connect-runtime</artifactId>
+        <version>3.3.1</version>
+    </dependency>
+
     <!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
     <dependency>
       <groupId>com.zaxxer</groupId>
