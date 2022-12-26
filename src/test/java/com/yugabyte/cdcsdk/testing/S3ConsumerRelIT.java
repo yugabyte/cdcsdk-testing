@@ -28,10 +28,11 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yugabyte.cdcsdk.sink.s3.S3ChangeConsumer;
-import com.yugabyte.cdcsdk.sink.s3.S3Storage;
-import com.yugabyte.cdcsdk.sink.s3.config.S3SinkConnectorConfig;
-import com.yugabyte.cdcsdk.sink.s3.util.S3Utils;
+
+import com.yugabyte.cdcsdk.testing.util.S3UtilFiles.S3Storage;
+import com.yugabyte.cdcsdk.testing.util.S3UtilFiles.S3SinkConnectorConfig;
+import com.yugabyte.cdcsdk.testing.util.S3UtilFiles.S3Utils;
+
 import com.yugabyte.cdcsdk.testing.util.CdcsdkTestBase;
 import com.yugabyte.cdcsdk.testing.util.UtilStrings;
 
@@ -46,6 +47,9 @@ public class S3ConsumerRelIT extends CdcsdkTestBase {
     private S3SinkConnectorConfig s3Config;
     private ConfigSourceS3 testConfig;
     private S3Storage storage;
+    public static final String PROP_SINK_PREFIX = "cdcsdk.sink.";
+    public static final String PROP_S3_PREFIX = PROP_SINK_PREFIX + "s3.";
+
 
     @BeforeAll
     public static void beforeClass() throws Exception {
@@ -69,7 +73,7 @@ public class S3ConsumerRelIT extends CdcsdkTestBase {
     @Test
     public void automationOfS3Assertions() throws Exception {
         testConfig = new ConfigSourceS3();
-        s3Config = new S3SinkConnectorConfig(testConfig.getMapSubset(S3ChangeConsumer.PROP_S3_PREFIX));
+        s3Config = new S3SinkConnectorConfig(testConfig.getMapSubset(PROP_S3_PREFIX));
 
         // At this point in code, we know that the table exists already so it's safe to get a CDCSDK server instance
         cdcsdkContainer = TestHelper.getCdcsdkContainerForS3Sink(ybHelper, "public." + DEFAULT_TABLE_NAME);

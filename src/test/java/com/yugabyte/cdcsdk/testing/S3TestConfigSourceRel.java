@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.yugabyte.cdcsdk.testing.util.TestConfigSource;
 
-
 public class S3TestConfigSourceRel extends TestConfigSource {
     public S3TestConfigSourceRel() {
         Map<String, String> s3Test = new HashMap<>();

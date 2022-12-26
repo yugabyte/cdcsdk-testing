@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <!-- <parent>
-    <groupId>com.yugabyte</groupId>
-    <artifactId>cdcsdk-parent</artifactId>
-    <version>1.0.0.RC1</version>
-	  <relativePath>../cdcsdk-parent/pom.xml</relativePath>
-  </parent> -->
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.yugabyte</groupId>
@@ -42,12 +36,6 @@
     </distributionManagement>
 
   <dependencies>
-    <!-- <dependency>
-      <groupId>com.yugabyte</groupId>
-      <artifactId>cdcsdk-server-s3</artifactId>
-      <version>${version.cdcsdk}</version>
-    </dependency> -->
-
     <dependency>
         <groupId>org.yb</groupId>
         <artifactId>yb-client</artifactId>
@@ -85,14 +73,6 @@
     </dependency>
 
     <!-- Testing -->
-    <!-- <dependency>
-      <groupId>com.yugabyte</groupId>
-      <artifactId>cdcsdk-server-s3</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-      <version>${version.cdcsdk}</version>
-    </dependency> -->
-
     <dependency>
       <groupId>com.yugabyte</groupId>
       <artifactId>testcontainers-yugabytedb</artifactId>
