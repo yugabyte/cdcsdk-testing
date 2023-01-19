@@ -1,14 +1,13 @@
 # cdcsdk-testing
 
-## Setup S3 Repository access to download Yugabyte Connector
+# Setup Credentials for cloud resources
+## S3 Access
 
 
     mkdir -p ~/.aws
     touch ~/.aws/credentials
 
-
-Copy credentials from [AWS Management
-Console|https://aws.amazon.com/blogs/security/aws-single-sign-on-now-enables-command-line-interface-access-for-aws-accounts-using-corporate-credentials/]
+Copy credentials from [AWS Management Console](https://aws.amazon.com/blogs/security/aws-single-sign-on-now-enables-command-line-interface-access-for-aws-accounts-using-corporate-credentials/)
 
 
 Follow instructions to create a profile in `~/.aws/credentials`. Change the
@@ -24,31 +23,36 @@ profile to default. The file should look like:
 **Note that these credentials and temporary and you may have to regularly pick
 up new credentials**
 
+## Kinesis
+
+Kinesis requires a credentials files similar to the instructions for S3 Access. It also requires the following parameters
+set as environment variables
+
+* USERID: UID of the user running tests. Required to mount the credentials file. `USERID=$(id -u)`
+* AWS_SHARED_CREDENTIALS_FILE: Path to credentials file. For example `AWS_SHARED_CREDENTIALS_FILE=/home/centos/.aws/credentials`
+
+The following env variables are optional:
+* AWS_REGION: Default is `us-west-2`
+* AWS_PROFILE: Default is `default`
+
 ## Integration Tests
 
-
-    mvn integration-test
+    mvn verify
     # Run a specific integration test
-    mvn integration-test -Dit.test=HttpIT -DfailIfNoTests=false
+    mvn verify -Dit.test=HttpIT -DfailIfNoTests=false
 
 ## Run Release Tests
 
-As of now, we are targeting 3 different stages of automation:
-1. YugabyteDB inside TestContainers
-2. CDCSDK Server inside TestContainers
-3. Assertion of S3 values and their cleanup
-
 To run the tests, follow these steps:
-* Make sure you have the required creds setup in your env variables
-  * `export AWS_ACCESS_KEY_ID='<your-access-key-id>'`
-  * `export AWS_SECRET_ACCESS_KEY='<your-secret-access-key>'`
-* Start a YugabyteDB instance on you local IP
-  * `./yugabyted start --listen $(hostname -i)` or `./yugabyted start --advertise_address $(hostname -i)` if you're using YugabyteDB version higher than 2.12
-* Run `mvn clean integration-test -PreleaseTests` inside the `cdcsdk-testing` repo
 
-* The below command will create a docker image of CDCSDK Server and run
-integration tests in cdcsdk-testing
-    * ```mvn integration-test -Drun.releaseTests```
+    export AWS_ACCESS_KEY_ID='<your-access-key-id>'
+    export AWS_SECRET_ACCESS_KEY='<your-secret-access-key>'
+
+    # Start a YugabyteDB instance on you local IP
+    ./yugabyted start --advertise_address $(hostname -i)`
+
+    cd code/cdcsdk-testing
+    mvn clean verify -PreleaseTests`
 
 ## Running tests with Specific Images for CDCSDK server and Kafka Connect
 
@@ -57,12 +61,28 @@ To run tests with specific images for CDCSDK server and Kafka Connect, you can s
     export KAFKA_CONNECT_IMAGE = "<image-for-kafka-connect>"
     export CDCSDK_SERVER_IMAGE = "<image-for-CDCSDK-server>"
 ```
-The default image for Kafka connect is ```quay.io/yugabyte/debezium-connector:1.3.7-BETA``` and the default image for CDCSDK Server is ```quay.io/yugabyte/cdcsdk-server:latest```
+The default image for Kafka connect is ```quay.io/yugabyte/debezium-connector:latest```
+and the default image for CDCSDK Server is ```quay.io/yugabyte/cdcsdk-server:latest```
 
-## Parameterized Tests (Running tests with CDCSDK Server as well as Kafka Connect)
-Currently the test `PostgresSinkConsumerIT` is parameterized. Running this will first run the test using CDCSDK Server and then again using Kafka Connect.
-
-To run the test with only CDCSDK Server or Kafka Connect, we need to change the parameters to reflect only the requirred CDC client.
+## Running tests with CDCSDK Server as well as Kafka Connect
+Tests can be run for CDCSDK Server, Kafka Connect or both by annotating the test.
 * To run with only CDCSDK Server ```@ValueSource(strings = UtilStrings.CDC_CLIENT_CDCSDK)```
 * To run with only Kafka Connect ```@ValueSource(strings = UtilStrings.CDC_CLIENT_KAFKA_CONNECT)```
 * To run with both, one at a time ```@ValueSource(strings = {UtilStrings.CDC_CLIENT_CDCSDK, UtilStrings.CDC_CLIENT_KAFKA_CONNECT })``` (This is the default behaviour)
+
+For example, `PostgresSinkConsumerIT` is parameterized. Running this will first run the test using CDCSDK Server and
+Kafka Connect.
+
+## Setup Tests for Hosted Queues
+
+Tests for Pubsub, Eventhub and Kinesis require credentials to be passed in using environment variables.
+
+### Pubsub
+
+    export GCLOUD_PROJECT=<project name>
+    export SUBSCRIPTION_ID=<subsription name>
+
+### Eventhub
+
+    export EVENTHUB_CONNECTIONSTRING=<connection string>
+    export EVENTHUB_HUBNAME=<hub name>

@@ -9,22 +9,30 @@ package com.yugabyte.cdcsdk.testing;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.UnsupportedEncodingException;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.awaitility.Awaitility;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicSessionCredentials;
+import com.amazonaws.services.kinesis.AmazonKinesis;
 import com.amazonaws.services.kinesis.AmazonKinesisClient;
+import com.amazonaws.services.kinesis.model.ResourceNotFoundException;
+import com.amazonaws.services.kinesis.model.CreateStreamRequest;
+import com.amazonaws.services.kinesis.model.DescribeStreamRequest;
+import com.amazonaws.services.kinesis.model.DeleteStreamRequest;
 import com.amazonaws.services.kinesis.model.GetRecordsRequest;
 import com.amazonaws.services.kinesis.model.GetRecordsResult;
 import com.amazonaws.services.kinesis.model.GetShardIteratorRequest;
@@ -42,14 +50,43 @@ import com.yugabyte.cdcsdk.testing.util.UtilStrings;
  */
 
 public class KinesisConsumerIT extends CdcsdkTestBase {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KinesisConsumerIT.class);
 
     private static String stream_name = "dbserver1.public.test_table";
-
+    private static AmazonKinesis client;
     @BeforeAll
     public static void beforeClass() throws Exception {
         initializeContainers();
 
         initHelpers(true, false, false);
+        client = AmazonKinesisClient.builder()
+                .withRegion("us-west-2")
+                .build();
+
+        // Check if stream exists
+
+        try {
+            DescribeStreamRequest describeStreamRequest = new DescribeStreamRequest();
+            describeStreamRequest.setStreamName(stream_name);
+
+            client.describeStream(describeStreamRequest);
+            LOGGER.debug("Stream found");
+        } catch (ResourceNotFoundException r) {
+            LOGGER.warn("Kinesis stream not found");
+            CreateStreamRequest createStreamRequest = new CreateStreamRequest();
+            createStreamRequest.setStreamName(stream_name);
+            createStreamRequest.setShardCount(1);
+            client.createStream(createStreamRequest);
+            LOGGER.info("Created kinesis stream '{}'", stream_name);
+        }
+    }
+
+    @AfterAll
+    public static void cleanUp() {
+        DeleteStreamRequest deleteStreamRequest = new DeleteStreamRequest();
+        deleteStreamRequest.setStreamName(stream_name);
+        client.deleteStream(deleteStreamRequest);
+        LOGGER.info("Deleted kinesis stream '{}'", stream_name);
     }
 
     @BeforeEach
@@ -69,7 +106,7 @@ public class KinesisConsumerIT extends CdcsdkTestBase {
     }
 
     @AfterEach
-    public void dropTable() throws Exception {
+    public void dropTable() throws SQLException {
         ybHelper.execute(UtilStrings.getDropTableStmt(DEFAULT_TABLE_NAME));
     }
 
@@ -87,8 +124,6 @@ public class KinesisConsumerIT extends CdcsdkTestBase {
 
         ybHelper.execute(UtilStrings.getDeleteStmt(DEFAULT_TABLE_NAME, 0));
 
-        Awaitility.await().atMost(Duration.ofSeconds(10));
-
         List<String> expected_data = List.of(
                 "{\"id\":0,\"first_name\":\"" + uuid
                         + "\",\"last_name\":\"last_0\",\"days_worked\":23.45,\"__deleted\":\"false\"}",
@@ -97,16 +132,10 @@ public class KinesisConsumerIT extends CdcsdkTestBase {
 
         List<String> actual_data = new ArrayList<>();
 
-        AWSCredentials awsCredentials = new BasicSessionCredentials(System.getenv("AWS_ACCESS_KEY_ID"),
-                System.getenv("AWS_SECRET_ACCESS_KEY"),
-                System.getenv("AWS_SESSION_TOKEN"));
-
-        AmazonKinesisClient client = new AmazonKinesisClient(awsCredentials);
-
-        client.setEndpoint(System.getenv("AWS_ENDPOINT"));
-
-        Awaitility.await().atMost(Duration.ofSeconds(600)).until(() -> checkRecords(client, expected_data, actual_data));
-
+        Awaitility.await().atMost(Duration.ofSeconds(600))
+                .pollDelay(Duration.ofSeconds(10))
+                .pollInterval(15, TimeUnit.SECONDS)
+                .until(() -> checkRecords(client, expected_data, actual_data));
     }
 
     public String getUUID() {
@@ -114,7 +143,8 @@ public class KinesisConsumerIT extends CdcsdkTestBase {
         return uuid.toString();
     }
 
-    public Boolean checkRecords(AmazonKinesisClient client, List<String> expectedData, List<String> actualData) throws Exception {
+    public Boolean checkRecords(AmazonKinesis client, List<String> expectedData, List<String> actualData)
+            throws Exception {
         List<Shard> initialShardData = client.describeStream(stream_name).getStreamDescription().getShards();
 
         // Getting shardIterators (at beginning sequence number) for reach shard
@@ -143,7 +173,7 @@ public class KinesisConsumerIT extends CdcsdkTestBase {
                     actualData.add(rec);
                 }
                 catch (UnsupportedEncodingException e) {
-                    System.out.println("Could not decode message from Kinesis stream result");
+                    LOGGER.error("Could not decode message from Kinesis stream result");
                     e.printStackTrace();
                 }
             });
