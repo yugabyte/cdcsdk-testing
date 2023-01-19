@@ -40,7 +40,6 @@ public class CdcsdkContainer {
     // Configurations related to S3 Sink
     // Use CDCSDK Server Transforms as FLATTEN
     private String cdcsdkSinkS3BucketName = "cdcsdk-test";
-    private String cdcsdkSinkS3Region = "us-west-2";
     private String cdcsdkSinkS3Basedir = "S3ConsumerIT/";
     private String cdcsdkSinkS3Pattern = "stream_12345";
     private String cdcsdkSinkS3FlushRecords = "5";
@@ -48,6 +47,8 @@ public class CdcsdkContainer {
     private String cdcsdkSinkS3AwsAccessKeyId = "";
     private String cdcsdkSinkS3AwsSecretAccessKey = "";
     private String cdcsdkSinkS3AwsSessionToken = "";
+    private String cdcsdkSinkAwsProfile = "default";
+    private String cdcsdkSinkAwsRegion = "us-west-2";
 
     // Configurations related to PubSub sink
     private String cdcsdkSinkPubSubProjectId = "yugabyte";
@@ -55,8 +56,6 @@ public class CdcsdkContainer {
     private String cdcsdkSinkPubSubNullKey = "null";
 
     // Configurations related to Kinesis sink
-    private String cdcsdkSinkKinesisRegion = "ap-south-1";
-    private String cdcsdkSinkKinesisCredentialsProfile = "default";
     private String cdcsdkSinkKinesisNullKey = "null";
 
     // Configurations related to Event Hubs sink
@@ -164,6 +163,16 @@ public class CdcsdkContainer {
         return this;
     }
 
+    public CdcsdkContainer withAwsProfile(String profile) {
+        this.cdcsdkSinkAwsProfile = profile != null ? profile : this.cdcsdkSinkAwsProfile;
+        return this;
+    }
+
+    public CdcsdkContainer withAwsRegion(String region) {
+        this.cdcsdkSinkAwsRegion = region != null ? region : this.cdcsdkSinkAwsRegion;
+        return this;
+    }
+
     // Kafka related configuration setters
 
     public CdcsdkContainer withKafkaBootstrapServers(String bootstrapServers) {
@@ -181,7 +190,7 @@ public class CdcsdkContainer {
         return this;
     }
 
-    private Map<String, String> getDatabaseConfigMap() throws Exception {
+    private Map<String, String> getDatabaseConfigMap() {
         Map<String, String> configs = new HashMap<>();
 
         configs.put("CDCSDK_SOURCE_CONNECTOR_CLASS", this.cdcsdkSourceConnectorClass);
@@ -199,7 +208,7 @@ public class CdcsdkContainer {
         return configs;
     }
 
-    public Map<String, String> getConfigMapForKafka() throws Exception {
+    public Map<String, String> getConfigMapForKafka() {
         Map<String, String> configs = getDatabaseConfigMap();
 
         configs.put("CDCSDK_SINK_TYPE", "kafka");
@@ -217,13 +226,13 @@ public class CdcsdkContainer {
         return configs;
     }
 
-    public Map<String, String> getConfigMapForS3() throws Exception {
+    public Map<String, String> getConfigMapForS3() {
         Map<String, String> configs = getDatabaseConfigMap();
 
         configs.put("CDCSDK_SINK_TYPE", "s3");
 
         configs.put("CDCSDK_SINK_S3_BUCKET_NAME", this.cdcsdkSinkS3BucketName);
-        configs.put("CDCSDK_SINK_S3_REGION", this.cdcsdkSinkS3Region);
+        configs.put("CDCSDK_SINK_S3_REGION", this.cdcsdkSinkAwsRegion);
         configs.put("CDCSDK_SINK_S3_BASEDIR", this.cdcsdkSinkS3Basedir);
         configs.put("CDCSDK_SINK_S3_PATTERN", this.cdcsdkSinkS3Pattern);
         configs.put("CDCSDK_SINK_S3_FLUSH_RECORDS", this.cdcsdkSinkS3FlushRecords);
@@ -237,7 +246,7 @@ public class CdcsdkContainer {
         return configs;
     }
 
-    public Map<String, String> getConfigMapForPubSub() throws Exception {
+    public Map<String, String> getConfigMapForPubSub() {
         Map<String, String> configs = getDatabaseConfigMap();
 
         configs.put("CDCSDK_SINK_TYPE", "pubsub");
@@ -255,13 +264,13 @@ public class CdcsdkContainer {
         return configs;
     }
 
-    public Map<String, String> getConfigMapForKinesis() throws Exception {
+    public Map<String, String> getConfigMapForKinesis() {
         Map<String, String> configs = getDatabaseConfigMap();
 
         configs.put("CDCSDK_SINK_TYPE", "kinesis");
 
-        configs.put("CDCSDK_SINK_KINESIS_REGION", this.cdcsdkSinkKinesisRegion);
-        configs.put("CDCSDK_SINK_KINESIS_CREDENTIALS_PROFILE", this.cdcsdkSinkKinesisCredentialsProfile);
+        configs.put("CDCSDK_SINK_KINESIS_REGION", this.cdcsdkSinkAwsRegion);
+        configs.put("CDCSDK_SINK_KINESIS_CREDENTIALS_PROFILE", this.cdcsdkSinkAwsProfile);
         configs.put("CDCSDK_SINK_KINESIS_NULL_KEY", this.cdcsdkSinkKinesisNullKey);
 
         configs.put("CDCSDK_SERVER_TRANSFORMS", "unwrap");
@@ -273,7 +282,7 @@ public class CdcsdkContainer {
         return configs;
     }
 
-    public Map<String, String> getConfigMapForEventHub() throws Exception {
+    public Map<String, String> getConfigMapForEventHub() {
         Map<String, String> configs = getDatabaseConfigMap();
 
         configs.put("CDCSDK_SINK_TYPE", "eventhubs");
@@ -290,7 +299,7 @@ public class CdcsdkContainer {
         return configs;
     }
 
-    public GenericContainer<?> build(Map<String, String> env) throws Exception {
+    public GenericContainer<?> build(Map<String, String> env) {
         GenericContainer<?> cdcsdkContainer = new GenericContainer<>(TestImages.getCDCSDKServerTestImage());
         cdcsdkContainer.withEnv(env);
 
@@ -307,23 +316,23 @@ public class CdcsdkContainer {
         return cdcsdkContainer;
     }
 
-    public GenericContainer<?> buildForKafkaSink() throws Exception {
+    public GenericContainer<?> buildForKafkaSink() {
         return build(getConfigMapForKafka());
     }
 
-    public GenericContainer<?> buildForS3Sink() throws Exception {
+    public GenericContainer<?> buildForS3Sink() {
         return build(getConfigMapForS3());
     }
 
-    public GenericContainer<?> buildForPubSubSink() throws Exception {
+    public GenericContainer<?> buildForPubSubSink() {
         return build(getConfigMapForPubSub());
     }
 
-    public GenericContainer<?> buildForKinesisSink() throws Exception {
+    public GenericContainer<?> buildForKinesisSink() {
         return build(getConfigMapForKinesis());
     }
 
-    public GenericContainer<?> buildForEventHubSink() throws Exception {
+    public GenericContainer<?> buildForEventHubSink() {
         return build(getConfigMapForEventHub());
     }
 

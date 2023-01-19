@@ -55,6 +55,8 @@ public class TestHelper {
                 .withMasterPort(String.valueOf(ybHelper.getMasterPort()))
                 .withStreamId(ybHelper.getNewDbStreamId(ybHelper.getDatabaseName()))
                 .withTableIncludeList(tableIncludeList)
+                .withAwsProfile(System.getenv("AWS_PROFILE"))
+                .withAwsRegion(System.getenv("AWS_REGION"))
                 .buildForKinesisSink();
     }
 
