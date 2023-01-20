@@ -1,5 +1,3 @@
-# cdcsdk-testing
-
 # Setup Credentials for cloud resources
 ## S3 Access
 
@@ -35,13 +33,19 @@ The following env variables are optional:
 * AWS_REGION: Default is `us-west-2`
 * AWS_PROFILE: Default is `default`
 
-## Integration Tests
+## Pubsub
 
-    mvn verify
-    # Run a specific integration test
-    mvn verify -Dit.test=HttpIT -DfailIfNoTests=false
+The environment variables that have to be set for Google Pub/Sub are:
 
-## Run Release Tests
+* USERID: UID of the user running tests. Required to mount the credentials file. `USERID=$(id -u)`
+* GOOGLE_APPLICATION_CREDENTIALS: File containing a service account key. Refer to
+  [Google Cloud Docs](https://cloud.google.com/docs/authentication/application-default-credentials)
+  to obtain the keys
+* GCLOUD_PROJECT: Name of the project. For example, `yugabyte`
+* SUBSCRIPTION_ID: Name of the subscription For example, `dbserver1.public.test_table-sub`.
+  A subscription by this name should be created in the topic `dbserver1.public.test_table-sub`
+
+# Run Release Tests
 
 To run the tests, follow these steps:
 
@@ -53,6 +57,9 @@ To run the tests, follow these steps:
 
     cd code/cdcsdk-testing
     mvn clean verify -PreleaseTests`
+
+    # Run a specific integration test
+    mvn verify -Dit.test=HttpIT -DfailIfNoTests=false
 
 ## Running tests with Specific Images for CDCSDK server and Kafka Connect
 
@@ -77,10 +84,6 @@ Kafka Connect.
 
 Tests for Pubsub, Eventhub and Kinesis require credentials to be passed in using environment variables.
 
-### Pubsub
-
-    export GCLOUD_PROJECT=<project name>
-    export SUBSCRIPTION_ID=<subsription name>
 
 ### Eventhub
 

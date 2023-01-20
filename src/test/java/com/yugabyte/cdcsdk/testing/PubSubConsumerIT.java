@@ -9,6 +9,7 @@ package com.yugabyte.cdcsdk.testing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.BindMode;
 
@@ -36,9 +38,11 @@ import com.yugabyte.cdcsdk.testing.util.UtilStrings;
  * @author Sumukh Phalgaonkar
  */
 
+@Disabled("Disabled until Jenkins is configured to run these tests")
 public class PubSubConsumerIT extends CdcsdkTestBase {
     // We are using project id ="yugabyte";
     private static String projectId = System.getenv("GCLOUD_PROJECT");
+
     // We are using subscription id"dbserver1.public.test_table-sub";
     private static String subscriptionId = System.getenv("SUBSCRIPTION_ID");
 
@@ -68,12 +72,12 @@ public class PubSubConsumerIT extends CdcsdkTestBase {
     }
 
     @AfterEach
-    public void dropTable() throws Exception {
+    public void dropTable() throws SQLException {
         ybHelper.execute(UtilStrings.getDropTableStmt(DEFAULT_TABLE_NAME));
     }
 
     @Test
-    public void automationOfPubSubAssertions() throws Exception {
+    public void automationOfPubSubAssertions() throws SQLException {
 
         int recordsInserted = 1;
         for (int i = 0; i < recordsInserted; ++i) {
