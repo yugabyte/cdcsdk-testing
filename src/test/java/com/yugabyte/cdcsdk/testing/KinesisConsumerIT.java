@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,7 @@ import com.yugabyte.cdcsdk.testing.util.UtilStrings;
  *
  * @author Sumukh Phalgaonkar
  */
-
+@Disabled("Disabled until Jenkins is configured to run these tests")
 public class KinesisConsumerIT extends CdcsdkTestBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(KinesisConsumerIT.class);
 

@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.azure.messaging.eventhubs.EventData;
@@ -36,6 +37,7 @@ import reactor.core.Disposable;
  * @author Sumukh Phalgaonkar
  */
 
+@Disabled("Azure Access Required")
 public class EventHubConsumerIT extends CdcsdkTestBase {
     private static final Duration OPERATION_TIMEOUT = Duration.ofSeconds(60);
     private static final int NUMBER_OF_EVENTS = 3;
