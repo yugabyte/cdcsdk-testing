@@ -49,7 +49,6 @@ import com.yugabyte.cdcsdk.testing.util.UtilStrings;
  *
  * @author Sumukh Phalgaonkar
  */
-@Disabled("Disabled until Jenkins is configured to run these tests")
 public class KinesisConsumerIT extends CdcsdkTestBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(KinesisConsumerIT.class);
 
