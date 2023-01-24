@@ -38,7 +38,6 @@ import com.yugabyte.cdcsdk.testing.util.UtilStrings;
  * @author Sumukh Phalgaonkar
  */
 
-@Disabled("Disabled until Jenkins is configured to run these tests")
 public class PubSubConsumerIT extends CdcsdkTestBase {
     // We are using project id ="yugabyte";
     private static String projectId = System.getenv("GCLOUD_PROJECT");
