@@ -171,4 +171,35 @@ public class KafkaHelper {
                 .with("transforms.unwrap.drop.tombstones","false")
                 .with("tasks.max", 1);
     }
+
+    /**
+     * Get configurations for Kafka connect source connector
+     * @param ybHelper {@link YBHelper} object having the information of YugabyteDB instance
+     * @param tableIncludeList comma separated list of tables in the form <em>schemaName.tableName</em>
+     * @return a {@link ConnectorConfiguration} for Kafka connect source connector
+     * @throws Exception if things go wrong
+     */
+    public ConnectorConfiguration getCustomConfiguration(YBHelper ybHelper, String tableIncludeList, String dbserverName) throws Exception {
+        return ConnectorConfiguration
+                 .create()
+                 .with("connector.class","io.debezium.connector.yugabytedb.YugabyteDBConnector")
+                 .with("database.hostname",ybHelper.getHostName())
+                 .with("database.port","5433")
+                 .with("database.master.addresses",ybHelper.getHostName()+":"+String.valueOf(ybHelper.getMasterPort()))
+                 .with("database.user","yugabyte")
+                 .with("database.password","yugabyte")
+                 .with("database.dbname", ybHelper.getDatabaseName())
+                 .with("database.server.name", dbserverName)
+                 .with("table.include.list", tableIncludeList)
+                 .with("snapshot.mode","initial")
+                 .with("database.streamid", ybHelper.getNewDbStreamId(ybHelper.getDatabaseName()))
+                 .with("producer.key.converter.schemas.enable","true")
+                 .with("producer.value.converter.schemas.enable","true")
+                 .with("key.converter","org.apache.kafka.connect.json.JsonConverter")
+                 .with("value.converter", "org.apache.kafka.connect.json.JsonConverter")
+                 .with("transforms","unwrap")
+                 .with("transforms.unwrap.type","io.debezium.connector.yugabytedb.transforms.YBExtractNewRecordState")
+                 .with("transforms.unwrap.drop.tombstones","false")
+                 .with("tasks.max", 1);
+    }
 }

@@ -28,9 +28,17 @@ public class YBHelper {
 
     private String sourceTableName;
 
+    private String streamId;
+
     public YBHelper(String hostName, String sourceTableName) {
         this.hostName = hostName;
         this.sourceTableName = sourceTableName;
+    }
+
+    public YBHelper(String hostName, String sourceTableName, String database) {
+        this.hostName = hostName;
+        this.sourceTableName = sourceTableName;
+        this.database = database;
     }
 
     public YBHelper(String hostName, int ysqlPort, int masterPort, String database, String username, String password, String sourceTableName) {
@@ -81,6 +89,10 @@ public class YBHelper {
      */
     public String getSourceTableName() {
         return this.sourceTableName;
+    }
+
+    public String getStreamId() {
+        return this.streamId;
     }
 
     /**
@@ -208,6 +220,7 @@ public class YBHelper {
             throw new NullPointerException("No table found with the specified name");
         }
 
-        return syncClient.createCDCStream(placeholderTable, dbName, "PROTO", "IMPLICIT").getStreamId();
+        this.streamId = syncClient.createCDCStream(placeholderTable, dbName, "PROTO", "IMPLICIT").getStreamId();
+        return this.streamId;
     }
 }

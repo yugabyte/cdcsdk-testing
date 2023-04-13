@@ -193,6 +193,38 @@ public class PgHelper {
 
     /**
      * Get a connector configuration for the JDBCSinkConnector
+     *
+     * @param pgContainer      PostgreSQLContainer instance
+     * @param kafkaTopics      comma separated values of Kafka topics to read from
+     * @param tableName  name of the target/sink table
+     * @param primaryKeyFields comma separated values of the primary key fields
+     * @return the connector configuration for JDBC sink
+     */
+    public ConnectorConfiguration getCustomSinkConfig(PostgreSQLContainer<?> pgContainer, String tableName, String primaryKeyFields,
+                                                      String topicName) {
+        String connUrl = "jdbc:postgresql://%s:%d/%s?user=%s&password=%s&sslMode=require";
+        return ConnectorConfiguration
+                 .forJdbcContainer(pgContainer)
+                 .with("connector.class", "io.confluent.connect.jdbc.JdbcSinkConnector")
+                 .with("tasks.max", "1")
+                 .with("topics", topicName)
+                 .with("dialect.name", "PostgreSqlDatabaseDialect")
+                 .with("table.name.format", tableName)
+                 .with("connection.url", String.format(connUrl, hostName, postgresPort, database, username, password))
+                 .with("auto.create", "true")
+                 .with("insert.mode", "upsert")
+                 .with("pk.fields", primaryKeyFields)
+                 .with("pk.mode", "record_key")
+                 .with("delete.enabled", "true")
+                 .with("auto.evolve", "true")
+                 .with("value.converter", "org.apache.kafka.connect.json.JsonConverter")
+                 .with("value.converter.schemas.enable", "true")
+                 .with("key.converter", "org.apache.kafka.connect.json.JsonConverter")
+                 .with("key.converter.schemas.enable", "true");
+    }
+
+    /**
+     * Get a connector configuration for the JDBCSinkConnector
      * 
      * @param pgContainer      PostgreSQLContainer instance
      * @param primaryKeyFields comma separated values of the primary key fields
