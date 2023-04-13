@@ -61,7 +61,7 @@ public class MultiStreamMultiTableIT extends CdcsdkTestBase {
 			pgHelpers.add(new PgHelper(postgresContainer, tableName.get(i)));
 		}
 
-		createDatabases(numTables);
+		createDatabases();
 	}
 
 	@BeforeEach
