@@ -8,7 +8,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 public class CdcsdkContainer {
-    private final String bootstrapLogLineRegex = "Checkpoint for tablet";
+    private final String bootstrapLogLineRegex = "Checkpoint from GetTabletListToPollForCDC for tablet";
 
     private final String cdcsdkSourceConnectorClass = "io.debezium.connector.yugabytedb.YugabyteDBConnector";
 

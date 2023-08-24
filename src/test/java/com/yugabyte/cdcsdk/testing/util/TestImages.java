@@ -24,7 +24,7 @@ public class TestImages {
 
     // This Kafka Connect image contains the required drivers and connectors
     // i.e. Postgres JDBC driver, MySql JDBC driver, JDBCSinkConnector
-    public static final String KAFKA_CONNECT_DEFAULT = "quay.io/yugabyte/debezium-connector:1.9.5.y.11";
+    public static final String KAFKA_CONNECT_DEFAULT = "quay.io/yugabyte/debezium-connector:1.9.5.y.33.SNAPSHOT";
 
     public static String getKafkaConnectTestImage() {
         String KAFKA_CONNECT_IMAGE = System.getenv("KAFKA_CONNECT_IMAGE");
